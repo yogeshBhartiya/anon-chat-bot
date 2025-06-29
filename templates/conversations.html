@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Conversations - Anonymous Chat Bot{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="h2">
+            <i data-feather="users" class="me-2"></i>
+            Conversations
+        </h1>
+        <p class="text-muted">View all anonymous chat conversations</p>
+    </div>
+</div>
+
+{% if conversations %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Conversation History</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Status</th>
+                        <th>Started</th>
+                        <th>Duration</th>
+                        <th>Messages</th>
+                        <th>Ended</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for conversation in conversations.items %}
+                    <tr>
+                        <td>
+                            <span class="badge bg-secondary">#{{ conversation.id }}</span>
+                        </td>
+                        <td>
+                            {% if conversation.status == 'active' %}
+                                <span class="badge bg-success">
+                                    <i data-feather="circle" width="12" height="12" class="me-1"></i>
+                                    Active
+                                </span>
+                            {% elif conversation.status == 'ended' %}
+                                <span class="badge bg-secondary">
+                                    <i data-feather="square" width="12" height="12" class="me-1"></i>
+                                    Ended
+                                </span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">
+                                    <i data-feather="pause" width="12" height="12" class="me-1"></i>
+                                    {{ conversation.status.title() }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                {{ conversation.started_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                            </small>
+                        </td>
+                        <td>
+                            {% if conversation.status == 'active' %}
+                                <span class="text-success">Ongoing</span>
+                            {% elif conversation.ended_at %}
+                                {% set duration = (conversation.ended_at - conversation.started_at).total_seconds() %}
+                                {% if duration < 3600 %}
+                                    {{ "%.0f"|format(duration / 60) }} min
+                                {% else %}
+                                    {{ "%.1f"|format(duration / 3600) }} hr
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ conversation.message_count }}</span>
+                        </td>
+                        <td>
+                            {% if conversation.ended_at %}
+                                <small class="text-muted">
+                                    {{ conversation.ended_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                                </small>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if conversations.pages > 1 %}
+        <nav aria-label="Conversations pagination">
+            <ul class="pagination justify-content-center">
+                {% if conversations.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('conversations', page=conversations.prev_num) }}">
+                            <i data-feather="chevron-left" width="16" height="16"></i>
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% for page_num in conversations.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != conversations.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('conversations', page=page_num) }}">{{ page_num }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if conversations.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('conversations', page=conversations.next_num) }}">
+                            <i data-feather="chevron-right" width="16" height="16"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i data-feather="message-circle" width="64" height="64" class="text-muted mb-3"></i>
+        <h5 class="text-muted">No conversations found</h5>
+        <p class="text-muted">Conversations will appear here once users start chatting.</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
